@@ -18,10 +18,10 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for better styling - Simplified for readability
+# Custom CSS for better styling - Simplified for Readability
 st.markdown("""
     <style>
-    /* Remove default Streamlit padding */
+    /* Remove default Streamlit padding for a cleaner look */
     .block-container {
         padding-top: 2rem;
         padding-bottom: 2rem;
@@ -48,7 +48,7 @@ st.markdown("""
     /* Header styling */
     .header-container {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 2rem;
+        padding: 2.5rem;
         text-align: center;
         border-radius: 20px;
         margin-bottom: 2rem;
@@ -95,7 +95,7 @@ st.markdown("""
         font-weight: 600;
         display: inline-block;
     }
-    
+
     /* Footer styling */
     .footer {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
@@ -109,8 +109,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Initialize session state
-if 'current_view' not in st.session_state:
-    st.session_state.current_view = 'Student Portal'
 if 'analysis_result' not in st.session_state:
     st.session_state.analysis_result = None
 if 'show_placement' not in st.session_state:
@@ -121,7 +119,7 @@ def make_api_request(method: str, endpoint: str, **kwargs) -> Optional[Dict]:
     """Make API request to backend"""
     url = f"{API_BASE_URL}{endpoint}"
     try:
-        timeout = 120 if "resume" in endpoint else 30
+        timeout = 120 
         response = requests.request(method, url, timeout=timeout, **kwargs)
         
         if response.status_code == 200:
@@ -139,33 +137,29 @@ def analyze_resumes(jd_file, resume_files):
     for resume_file in resume_files:
         files.append(('resumes', (resume_file.name, resume_file.getvalue(), resume_file.type)))
     
-    # Using the correct endpoint
     result = make_api_request("POST", "/api/v1/resume", files=files)
     return result
 
 def render_circular_progress(score: int, size: int = 200):
-    """Render a circular progress indicator"""
-    color = "#38ef7d" if score >= 70 else "#f2c94c" if score >= 40 else "#f45c43"
+    """Render a circular progress indicator with readable text."""
+    progress_color = "#38ef7d" if score >= 70 else "#f2c94c" if score >= 40 else "#f45c43"
     background_color = "#e0e0e0"
+    text_color = "#262730" # Dark text color for all themes
     
-    # Calculate the stroke dasharray for the circle
-    circumference = 2 * 3.14159 * 90  # radius = 90
+    circumference = 2 * 3.14159 * 90
     offset = circumference - (score / 100) * circumference
     
     return f"""
     <div style="display: flex; justify-content: center; align-items: center; margin: 2rem 0;">
         <svg width="{size}" height="{size}" viewBox="0 0 200 200">
-            <!-- Background circle -->
             <circle cx="100" cy="100" r="90" fill="none" stroke="{background_color}" stroke-width="15"/>
-            <!-- Progress circle -->
-            <circle cx="100" cy="100" r="90" fill="none" stroke="{color}" stroke-width="15"
+            <circle cx="100" cy="100" r="90" fill="none" stroke="{progress_color}" stroke-width="15"
                     stroke-dasharray="{circumference}" stroke-dashoffset="{offset}"
                     stroke-linecap="round" transform="rotate(-90 100 100)"/>
-            <!-- Score text -->
-            <text x="100" y="90" text-anchor="middle" font-size="36" font-weight="bold" fill="{color}">
+            <text x="100" y="90" text-anchor="middle" font-size="36" font-weight="bold" fill="{text_color}">
                 {score}%
             </text>
-            <text x="100" y="120" text-anchor="middle" font-size="16" fill="#666">
+            <text x="100" y="120" text-anchor="middle" font-size="16" fill="{text_color}">
                 Relevance
             </text>
         </svg>
@@ -189,10 +183,7 @@ with st.sidebar:
         label_visibility="collapsed"
     )
     
-    if "Placement" in view_option:
-        st.session_state.show_placement = True
-    else:
-        st.session_state.show_placement = False
+    st.session_state.show_placement = "Placement" in view_option
     
     st.markdown("---")
     st.subheader("💡 Tips for Success")
@@ -207,12 +198,8 @@ with st.sidebar:
     st.subheader("📊 System Stats")
     st.info("Powered by AI. Fast, accurate, and reliable analysis.")
 
-
 # Main content area
-main_container = st.container()
-
-with main_container:
-    # Header
+with st.container():
     st.markdown("""
     <div class="header-container">
         <h1 class="header-title">📄 Innomatics Resume Analyzer</h1>
@@ -221,205 +208,119 @@ with main_container:
     """, unsafe_allow_html=True)
     
     if not st.session_state.show_placement:
-        # Student Portal View
+        # --- Student Portal View ---
         st.header("🎓 Student Portal - Check Your Resume Match")
-        st.markdown("Upload a job description and your resume to get instant AI-powered feedback")
+        st.markdown("Upload a job description and your resume to get instant AI-powered feedback.")
         
-        # File uploaders with better layout
         col1, col2 = st.columns(2)
-        
         with col1:
-            st.markdown("##### 📋 Step 1: Upload Job Description")
-            jd_file = st.file_uploader(
-                "",
-                type=['pdf', 'docx', 'txt'],
-                help="Upload the job description you're applying for",
-                key="jd_upload"
-            )
-            
-            if jd_file:
-                st.success(f"✅ JD uploaded: {jd_file.name}")
-        
+            st.markdown("##### 📋 Upload Job Description")
+            jd_file = st.file_uploader("", type=['pdf', 'docx', 'txt'], key="jd_upload")
         with col2:
-            st.markdown("##### 📄 Step 2: Upload Your Resume(s)")
-            resume_files = st.file_uploader(
-                "",
-                type=['pdf', 'docx'],
-                accept_multiple_files=True,
-                help="You can upload multiple resumes for batch analysis",
-                key="resume_upload"
-            )
-            
-            if resume_files:
-                st.success(f"✅ {len(resume_files)} resume(s) uploaded")
-                for resume in resume_files:
-                    st.caption(f"• {resume.name}")
+            st.markdown("##### 📄 Upload Your Resume(s)")
+            resume_files = st.file_uploader("", type=['pdf', 'docx'], accept_multiple_files=True, key="resume_upload")
         
-        # Analyze button
         if jd_file and resume_files:
-            col1, col2, col3 = st.columns([1, 2, 1])
-            with col2:
-                if st.button("🚀 Analyze Resume Match", type="primary", use_container_width=True):
-                    with st.spinner("🔍 AI is analyzing your documents... This may take 30-60 seconds"):
-                        
-                        analysis_result = analyze_resumes(jd_file, resume_files)
-                    
-                    if analysis_result:
-                        st.session_state.analysis_result = analysis_result
-                        st.success("✅ Analysis Complete! See your results below.")
-                        st.balloons()
+            if st.button("🚀 Analyze Resume Match", type="primary", use_container_width=True):
+                with st.spinner("🔍 AI is analyzing your documents... This may take a moment."):
+                    st.session_state.analysis_result = analyze_resumes(jd_file, resume_files)
+                
+                if st.session_state.analysis_result:
+                    st.success("✅ Analysis Complete! See your results below.")
+                    st.balloons()
         
-        # Display results
+        # Display results for Student Portal
         if st.session_state.analysis_result:
             result = st.session_state.analysis_result
-            
             st.markdown("---")
             st.header("📊 Your Analysis Results")
-            
-            # Job info
-            st.info(f"**📋 Job Analyzed:** {result.get('job_description_file', 'N/A')} | **🔖 Job ID:** `{result.get('firestore_job_id', 'N/A')}`")
-            
-            # Results for each resume
-            if result.get('results'):
-                for idx, candidate in enumerate(result['results']):
-                    score = candidate.get('relevance_score', 0)
-                    verdict = candidate.get('verdict', 'Unknown')
+            st.info(f"**Job Analyzed:** {result.get('job_description_file', 'N/A')}")
+
+            for idx, candidate in enumerate(result.get('results', [])):
+                score = candidate.get('relevance_score', 0)
+                verdict = candidate.get('verdict', 'Unknown')
+                
+                with st.expander(f"📄 {candidate.get('file_name')} - Score: {score}% ({verdict})", expanded=(idx == 0)):
+                    col1, col2 = st.columns([1, 2])
+                    with col1:
+                        st.markdown(render_circular_progress(score), unsafe_allow_html=True)
+                        st.markdown(f"<center>{get_verdict_html(verdict)}</center>", unsafe_allow_html=True)
                     
-                    # Create expandable card for each resume
-                    with st.expander(f"📄 {candidate.get('file_name')} - Score: {score}% ({verdict})", expanded=(idx == 0)):
-                        col1, col2 = st.columns([1, 2])
+                    with col2:
+                        st.subheader("💡 AI Feedback")
+                        feedback = candidate.get('feedback', 'No feedback available.')
+                        st.info(feedback)
                         
-                        with col1:
-                            # Circular progress
-                            st.markdown(render_circular_progress(score), unsafe_allow_html=True)
-                            
-                            # Verdict badge
-                            st.markdown(f"<center>{get_verdict_html(verdict)}</center>", unsafe_allow_html=True)
-                        
-                        with col2:
-                            st.subheader("💡 AI Feedback")
-                            feedback = candidate.get('feedback', 'No feedback available.')
-                            st.info(feedback)
-                            
-                            missing_skills = candidate.get('missing_skills', [])
-                            if missing_skills:
-                                st.subheader("🎯 Skills Gap Analysis")
-                                st.warning("**Add these skills to improve your score:**")
-                                
-                                # Display skills in a grid
-                                skills_cols = st.columns(3)
-                                for i, skill in enumerate(missing_skills):
-                                    with skills_cols[i % 3]:
-                                        st.markdown(f"• `{skill}`")
-                            
-                            # Action items
-                            st.subheader("✅ Next Steps")
-                            if score >= 70:
-                                st.success("Great match! Your resume aligns well with the job requirements.")
-                            elif score >= 40:
-                                st.warning("Good start! Add the missing skills to improve your chances.")
-                            else:
-                                st.error("Consider tailoring your resume more closely to the job requirements.")
-    
+                        missing_skills = candidate.get('missing_skills', [])
+                        if missing_skills:
+                            st.subheader("🎯 Skills Gap Analysis")
+                            st.warning("**Consider adding these to your resume:**")
+                            skills_cols = st.columns(3)
+                            for i, skill in enumerate(missing_skills):
+                                with skills_cols[i % 3]:
+                                    st.markdown(f"• `{skill}`")
+
     else:
-        # Placement Team View
+        # --- Placement Team View ---
         st.header("👔 Placement Team Dashboard")
-        st.markdown("Batch analyze multiple resumes against job descriptions")
+        st.markdown("Batch analyze multiple resumes against job descriptions.")
         
+        # Removed the "Analytics" tab
         tab1, tab2 = st.tabs(["📤 Batch Analysis", "📊 Results Overview"])
         
         with tab1:
-            st.subheader("Upload JD and Multiple Resumes for Batch Processing")
-            
+            st.subheader("Upload JD and Resumes")
             col1, col2 = st.columns(2)
-            
             with col1:
-                jd_file = st.file_uploader(
-                    "Job Description",
-                    type=['pdf', 'docx', 'txt'],
-                    key="placement_jd"
-                )
-            
+                jd_file = st.file_uploader("Job Description", type=['pdf', 'docx', 'txt'], key="placement_jd")
             with col2:
-                resume_files = st.file_uploader(
-                    "Candidate Resumes (Multiple)",
-                    type=['pdf', 'docx'],
-                    accept_multiple_files=True,
-                    key="placement_resumes"
-                )
+                resume_files = st.file_uploader("Candidate Resumes", type=['pdf', 'docx'], accept_multiple_files=True, key="placement_resumes")
             
             if jd_file and resume_files:
-                st.info(f"Ready to analyze {len(resume_files)} resumes against the job description")
-                
                 if st.button("🚀 Start Batch Analysis", type="primary", use_container_width=True):
                     with st.spinner(f"Analyzing {len(resume_files)} resumes..."):
-                        analysis_result = analyze_resumes(jd_file, resume_files)
-                    
-                    if analysis_result:
-                        st.session_state.analysis_result = analysis_result
+                        st.session_state.analysis_result = analyze_resumes(jd_file, resume_files)
+                    if st.session_state.analysis_result:
                         st.success("✅ Batch analysis complete!")
-        
+
         with tab2:
             if st.session_state.analysis_result:
                 result = st.session_state.analysis_result
-                
                 st.subheader("Candidate Ranking Dashboard")
-                
+
                 if result.get('results'):
-                    # Create DataFrame for better visualization
-                    candidates_data = []
-                    for r in result['results']:
-                        candidates_data.append({
-                            'Candidate': r.get('file_name', 'Unknown'),
-                            'Score': r.get('relevance_score', 0),
-                            'Verdict': r.get('verdict', 'Unknown'),
-                            'Status': '✅ Good Fit' if r.get('relevance_score', 0) >= 70 else '⚠️ Review' if r.get('relevance_score', 0) >= 40 else '❌ Poor Fit'
-                        })
+                    df = pd.DataFrame(result.get('results'))
+                    df = df.sort_values('relevance_score', ascending=False)
                     
-                    df = pd.DataFrame(candidates_data)
-                    df = df.sort_values('Score', ascending=False)
-                    
-                    # Display top candidates
-                    st.markdown("##### 🏆 Top Candidates")
                     st.dataframe(
-                        df,
+                        df[['file_name', 'relevance_score', 'verdict']],
                         use_container_width=True,
                         hide_index=True,
                         column_config={
-                            "Score": st.column_config.ProgressColumn(
+                            "relevance_score": st.column_config.ProgressColumn(
                                 "Match %",
-                                help="Relevance score",
                                 format="%d%%",
                                 min_value=0,
                                 max_value=100,
                             ),
                         }
                     )
-                    
-                    # Detailed view
-                    st.markdown("##### 📋 Detailed Analysis")
-                    for candidate in result['results']:
-                        with st.expander(f"{candidate.get('file_name')} - {candidate.get('relevance_score')}%"):
-                            col1, col2 = st.columns(2)
-                            with col1:
-                                st.metric("Score", f"{candidate.get('relevance_score')}%")
-                                st.metric("Verdict", candidate.get('verdict'))
-                            with col2:
-                                st.write("**Feedback:**")
-                                st.write(candidate.get('feedback'))
-                                if candidate.get('missing_skills'):
-                                    st.write("**Skills Gap:**")
-                                    st.write(", ".join(candidate.get('missing_skills')))
+
+                    st.markdown("---")
+                    st.subheader("📋 Detailed Analysis")
+                    for _, row in df.iterrows():
+                        with st.expander(f"{row['file_name']} - {row['relevance_score']}%"):
+                            st.write("**Feedback:**")
+                            st.info(row.get('feedback', 'N/A'))
+                            if row.get('missing_skills'):
+                                st.write("**Missing Skills:** ", ", ".join(row['missing_skills']))
             else:
                 st.info("No analysis results yet. Please run a batch analysis first.")
         
-# Footer
-st.markdown("---")
-st.markdown("""
-<div class="footer">
-    <h3 style="margin-bottom: 1rem;">🚀 Powered by Innomatics AI</h3>
-    <p style="margin-bottom: 0;">Advanced Resume Analysis • Instant Feedback • Data-Driven Insights</p>
-    <p style="font-size: 0.9rem; margin-top: 1rem; opacity: 0.9;">Built with Streamlit & FastAPI • Powered by LLMs</p>
-</div>
-""", unsafe_allow_html=True)
+    st.markdown("""
+    <div class="footer">
+        <h3 style="margin-bottom: 1rem;">🚀 Powered by Innomatics AI</h3>
+        <p style="margin-bottom: 0;">Advanced Resume Analysis • Instant Feedback • Data-Driven Insights</p>
+    </div>
+    """, unsafe_allow_html=True)
 
