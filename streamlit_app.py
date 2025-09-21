@@ -18,28 +18,18 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for better styling - Enhanced version
+# Custom CSS for better styling - Simplified for readability
 st.markdown("""
     <style>
-    /* Main container styling */
-    .main {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 0;
-    }
-    
+    /* Remove default Streamlit padding */
     .block-container {
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 20px;
-        padding: 2rem;
-        margin: 1rem auto;
-        max-width: 1400px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-        color: #262730; /* This ensures text inside the container is dark */
+        padding-top: 2rem;
+        padding-bottom: 2rem;
     }
-    
+
     /* Button styling */
     .stButton > button {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background-color: #667eea;
         color: white;
         border-radius: 25px;
         padding: 0.75rem 2rem;
@@ -55,34 +45,13 @@ st.markdown("""
         box-shadow: 0 6px 25px rgba(102, 126, 234, 0.5);
     }
     
-    /* File uploader styling */
-    .stFileUploader {
-        background: white;
-        border: 2px dashed #667eea;
-        border-radius: 15px;
-        padding: 2rem;
-        transition: all 0.3s ease;
-    }
-    
-    .stFileUploader:hover {
-        border-color: #764ba2;
-        background: #f8f9ff;
-    }
-    
-    .uploadedFile {
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-        border-radius: 10px;
-        padding: 0.5rem 1rem;
-        margin: 0.5rem 0;
-    }
-    
     /* Header styling */
     .header-container {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 3rem 0;
-        margin: -2rem -2rem 2rem -2rem;
+        padding: 2rem;
         text-align: center;
-        border-radius: 20px 20px 0 0;
+        border-radius: 20px;
+        margin-bottom: 2rem;
     }
     
     .header-title {
@@ -97,21 +66,6 @@ st.markdown("""
         color: rgba(255, 255, 255, 0.9);
         font-size: 1.2rem;
         font-weight: 400;
-    }
-    
-    /* Score card styling */
-    .score-card {
-        background: white;
-        border-radius: 20px;
-        padding: 2rem;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-        text-align: center;
-        transition: transform 0.3s ease;
-    }
-    
-    .score-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
     }
     
     /* Verdict styling */
@@ -142,67 +96,13 @@ st.markdown("""
         display: inline-block;
     }
     
-    /* Expander styling */
-    .streamlit-expander {
-        background: white;
-        border: 2px solid #f0f2f6;
-        border-radius: 15px;
-        margin: 1rem 0;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    }
-    
-    .streamlit-expander:hover {
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    }
-    
-    /* Info box styling */
-    .stAlert {
-        background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-        border-left: 4px solid #667eea;
-        border-radius: 10px;
-    }
-    
-    /* Sidebar styling */
-    .css-1d391kg {
-        background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
-    }
-    
-    .sidebar .sidebar-content {
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 15px;
-        padding: 1rem;
-        margin: 1rem;
-    }
-    
-    /* Progress bar styling */
-    .stProgress > div > div > div > div {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-    
-    /* Metric styling */
-    .metric-container {
-        background: white;
-        border-radius: 15px;
-        padding: 1.5rem;
-        box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
-        margin: 1rem 0;
-    }
-    
-    /* Tab styling */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 1rem;
-        background: transparent;
-    }
-    
-    .stTabs [data-baseweb="tab"] {
-        background: white;
-        border-radius: 10px;
-        padding: 0.75rem 1.5rem;
-        border: 2px solid #f0f2f6;
-    }
-    
-    .stTabs [aria-selected="true"] {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    /* Footer styling */
+    .footer {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+        border-radius: 15px; 
+        padding: 2rem; 
+        margin-top: 3rem; 
+        text-align: center; 
         color: white;
     }
     </style>
@@ -280,16 +180,13 @@ def get_verdict_html(verdict: str):
 
 # Sidebar
 with st.sidebar:
-    st.markdown("""
-    <div style="background: white; border-radius: 15px; padding: 1.5rem; margin-bottom: 1rem;">
-        <h3 style="color: #667eea; margin-bottom: 1rem;">🎯 Navigation</h3>
-    </div>
-    """, unsafe_allow_html=True)
+    st.title("🎯 Navigation")
     
     view_option = st.radio(
         "",
         ["🎓 Student Portal", "👔 Placement Team"],
-        key="view_selector"
+        key="view_selector",
+        label_visibility="collapsed"
     )
     
     if "Placement" in view_option:
@@ -297,26 +194,19 @@ with st.sidebar:
     else:
         st.session_state.show_placement = False
     
+    st.markdown("---")
+    st.subheader("💡 Tips for Success")
     st.markdown("""
-    <div style="background: white; border-radius: 15px; padding: 1.5rem; margin-top: 2rem;">
-        <h4 style="color: #667eea;">💡 Tips for Success</h4>
-        <ul style="color: #666; font-size: 0.9rem;">
-            <li>Use keywords from JD</li>
-            <li>Highlight relevant projects</li>
-            <li>Include certifications</li>
-            <li>Quantify achievements</li>
-        </ul>
-    </div>
-    """, unsafe_allow_html=True)
+        - Use keywords from the JD
+        - Highlight relevant projects
+        - Include certifications
+        - Quantify achievements
+    """)
     
-    st.markdown("""
-    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                border-radius: 15px; padding: 1.5rem; margin-top: 2rem; color: white; text-align: center;">
-        <h4>📊 System Stats</h4>
-        <p style="margin: 0.5rem 0;">Powered by AI</p>
-        <p style="margin: 0.5rem 0; font-size: 0.9rem;">Fast • Accurate • Reliable</p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("---")
+    st.subheader("📊 System Stats")
+    st.info("Powered by AI. Fast, accurate, and reliable analysis.")
+
 
 # Main content area
 main_container = st.container()
@@ -332,7 +222,7 @@ with main_container:
     
     if not st.session_state.show_placement:
         # Student Portal View
-        st.markdown("### 🎓 Student Portal - Check Your Resume Match")
+        st.header("🎓 Student Portal - Check Your Resume Match")
         st.markdown("Upload a job description and your resume to get instant AI-powered feedback")
         
         # File uploaders with better layout
@@ -371,13 +261,8 @@ with main_container:
             with col2:
                 if st.button("🚀 Analyze Resume Match", type="primary", use_container_width=True):
                     with st.spinner("🔍 AI is analyzing your documents... This may take 30-60 seconds"):
-                        progress = st.progress(0)
-                        for i in range(100):
-                            time.sleep(0.01)
-                            progress.progress(i + 1)
                         
                         analysis_result = analyze_resumes(jd_file, resume_files)
-                        progress.empty()
                     
                     if analysis_result:
                         st.session_state.analysis_result = analysis_result
@@ -389,7 +274,7 @@ with main_container:
             result = st.session_state.analysis_result
             
             st.markdown("---")
-            st.markdown("## 📊 Your Analysis Results")
+            st.header("📊 Your Analysis Results")
             
             # Job info
             st.info(f"**📋 Job Analyzed:** {result.get('job_description_file', 'N/A')} | **🔖 Job ID:** `{result.get('firestore_job_id', 'N/A')}`")
@@ -412,13 +297,13 @@ with main_container:
                             st.markdown(f"<center>{get_verdict_html(verdict)}</center>", unsafe_allow_html=True)
                         
                         with col2:
-                            st.markdown("#### 💡 AI Feedback")
+                            st.subheader("💡 AI Feedback")
                             feedback = candidate.get('feedback', 'No feedback available.')
                             st.info(feedback)
                             
                             missing_skills = candidate.get('missing_skills', [])
                             if missing_skills:
-                                st.markdown("#### 🎯 Skills Gap Analysis")
+                                st.subheader("🎯 Skills Gap Analysis")
                                 st.warning("**Add these skills to improve your score:**")
                                 
                                 # Display skills in a grid
@@ -428,7 +313,7 @@ with main_container:
                                         st.markdown(f"• `{skill}`")
                             
                             # Action items
-                            st.markdown("#### ✅ Next Steps")
+                            st.subheader("✅ Next Steps")
                             if score >= 70:
                                 st.success("Great match! Your resume aligns well with the job requirements.")
                             elif score >= 40:
@@ -438,13 +323,13 @@ with main_container:
     
     else:
         # Placement Team View
-        st.markdown("### 👔 Placement Team Dashboard")
+        st.header("👔 Placement Team Dashboard")
         st.markdown("Batch analyze multiple resumes against job descriptions")
         
-        tab1, tab2, tab3 = st.tabs(["📤 Batch Analysis", "📊 Results Overview", "📈 Analytics"])
+        tab1, tab2 = st.tabs(["📤 Batch Analysis", "📊 Results Overview"])
         
         with tab1:
-            st.markdown("#### Upload JD and Multiple Resumes for Batch Processing")
+            st.subheader("Upload JD and Multiple Resumes for Batch Processing")
             
             col1, col2 = st.columns(2)
             
@@ -478,7 +363,7 @@ with main_container:
             if st.session_state.analysis_result:
                 result = st.session_state.analysis_result
                 
-                st.markdown("#### Candidate Ranking Dashboard")
+                st.subheader("Candidate Ranking Dashboard")
                 
                 if result.get('results'):
                     # Create DataFrame for better visualization
@@ -528,45 +413,10 @@ with main_container:
             else:
                 st.info("No analysis results yet. Please run a batch analysis first.")
         
-        with tab3:
-            if st.session_state.analysis_result and st.session_state.analysis_result.get('results'):
-                st.markdown("#### 📈 Recruitment Analytics")
-                
-                results = st.session_state.analysis_result['results']
-                
-                # Calculate statistics
-                scores = [r.get('relevance_score', 0) for r in results]
-                avg_score = sum(scores) / len(scores) if scores else 0
-                high_fit = len([s for s in scores if s >= 70])
-                medium_fit = len([s for s in scores if 40 <= s < 70])
-                low_fit = len([s for s in scores if s < 40])
-                
-                # Display metrics
-                col1, col2, col3, col4 = st.columns(4)
-                with col1:
-                    st.metric("Average Score", f"{avg_score:.1f}%")
-                with col2:
-                    st.metric("High Fit", high_fit, delta=f"{(high_fit/len(scores)*100):.0f}%")
-                with col3:
-                    st.metric("Medium Fit", medium_fit, delta=f"{(medium_fit/len(scores)*100):.0f}%")
-                with col4:
-                    st.metric("Low Fit", low_fit, delta=f"{(low_fit/len(scores)*100):.0f}%")
-                
-                # Distribution chart (text-based)
-                st.markdown("##### Score Distribution")
-                chart_data = pd.DataFrame({
-                    'Category': ['High (70-100)', 'Medium (40-69)', 'Low (0-39)'],
-                    'Count': [high_fit, medium_fit, low_fit]
-                })
-                st.bar_chart(chart_data.set_index('Category'))
-            else:
-                st.info("Run an analysis to see analytics")
-
 # Footer
 st.markdown("---")
 st.markdown("""
-<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-            border-radius: 15px; padding: 2rem; margin-top: 3rem; text-align: center; color: white;">
+<div class="footer">
     <h3 style="margin-bottom: 1rem;">🚀 Powered by Innomatics AI</h3>
     <p style="margin-bottom: 0;">Advanced Resume Analysis • Instant Feedback • Data-Driven Insights</p>
     <p style="font-size: 0.9rem; margin-top: 1rem; opacity: 0.9;">Built with Streamlit & FastAPI • Powered by LLMs</p>
