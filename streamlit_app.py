@@ -34,6 +34,7 @@ st.markdown("""
         margin: 1rem auto;
         max-width: 1400px;
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        color: #262730; /* This ensures text inside the container is dark */
     }
     
     /* Button styling */
@@ -571,3 +572,4 @@ st.markdown("""
     <p style="font-size: 0.9rem; margin-top: 1rem; opacity: 0.9;">Built with Streamlit & FastAPI • Powered by LLMs</p>
 </div>
 """, unsafe_allow_html=True)
+
