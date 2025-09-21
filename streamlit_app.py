@@ -8,7 +8,7 @@ from typing import Dict, List, Optional
 import base64
 
 # Configuration
-API_BASE_URL = "https://anmol1357-resume_checker_backend.hf.space"
+API_BASE_URL = "https://anmol1357-resume-checker-backend.hf.space"
 
 # Page Configuration
 st.set_page_config(
