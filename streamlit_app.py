@@ -85,18 +85,19 @@ st.markdown("""
     }
     
     .header-title {
-        color: white;
-        font-size: 3rem;
-        font-weight: 800;
-        margin-bottom: 0.5rem;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    
+    color: black;
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
     .header-subtitle {
-        color: rgba(255, 255, 255, 0.9);
-        font-size: 1.2rem;
-        font-weight: 400;
-    }
+    color: rgba(0, 0, 0, 0.8);
+    font-size: 1.2rem;
+    font-weight: 400;
+}
+
     
     /* Score card styling */
     .score-card {
@@ -310,11 +311,11 @@ with st.sidebar:
     
     st.markdown("""
     <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                border-radius: 15px; padding: 1.5rem; margin-top: 2rem; color: white; text-align: center;">
-        <h4>📊 System Stats</h4>
-        <p style="margin: 0.5rem 0;">Powered by AI</p>
-        <p style="margin: 0.5rem 0; font-size: 0.9rem;">Fast • Accurate • Reliable</p>
-    </div>
+            border-radius: 15px; padding: 2rem; margin-top: 3rem; text-align: center; color: black;">
+    <h3 style="margin-bottom: 1rem;">🚀 Powered by Innomatics AI</h3>
+    <p style="margin-bottom: 0;">Advanced Resume Analysis • Instant Feedback • Data-Driven Insights</p>
+    <p style="font-size: 0.9rem; margin-top: 1rem; opacity: 0.9;">Built with Streamlit & FastAPI • Powered by LLMs</p>
+   </div>
     """, unsafe_allow_html=True)
 
 # Main content area
