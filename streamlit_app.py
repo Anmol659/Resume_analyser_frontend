@@ -67,13 +67,7 @@ st.markdown("""
 
 # Initialize session state
 if 'current_view' not in st.session_state:
-    st.session_state.current_view = 'Placement Team'
-if 'jobs' not in st.session_state:
-    st.session_state.jobs = []
-if 'selected_job_id' not in st.session_state:
-    st.session_state.selected_job_id = None
-if 'candidates' not in st.session_state:
-    st.session_state.candidates = []
+    st.session_state.current_view = 'Student Portal' # Default to student view
 if 'analysis_result' not in st.session_state:
     st.session_state.analysis_result = None
 
@@ -82,7 +76,10 @@ def make_api_request(method: str, endpoint: str, **kwargs) -> Optional[Dict]:
     """Make API request to backend"""
     url = f"{API_BASE_URL}{endpoint}"
     try:
-        response = requests.request(method, url, timeout=30, **kwargs)
+        # Increase timeout for analysis
+        timeout = 120 if "resume" in endpoint else 30
+        response = requests.request(method, url, timeout=timeout, **kwargs)
+        
         if response.status_code == 200:
             return response.json()
         else:
@@ -92,33 +89,14 @@ def make_api_request(method: str, endpoint: str, **kwargs) -> Optional[Dict]:
         st.error(f"Connection Error: {str(e)}")
         return None
 
-def fetch_jobs():
-    """Fetch all available jobs from the backend"""
-    result = make_api_request("GET", "/api/v1/jobs")
-    if result:
-        st.session_state.jobs = result.get('jobs', [])
-        return result.get('jobs', [])
-    return []
-
-def upload_job_description(file):
-    """Upload job description to backend"""
-    files = {'file': (file.name, file.getvalue(), file.type)}
-    result = make_api_request("POST", "/api/v1/jobs", files=files)
-    return result
-
-def fetch_candidates(job_id: str):
-    """Fetch candidates for a specific job"""
-    result = make_api_request("GET", f"/api/v1/jobs/{job_id}/candidates")
-    if result:
-        st.session_state.candidates = result.get('candidates', [])
-        return result.get('candidates', [])
-    return []
-
-def analyze_resume(job_id: str, resume_file):
-    """Send resume for analysis"""
-    files = {'file': (resume_file.name, resume_file.getvalue(), resume_file.type)}
-    data = {'job_id': job_id}
-    result = make_api_request("POST", "/api/v1/analyze", files=files, data=data)
+def analyze_resumes(jd_file, resume_files):
+    """Send JD and resumes for analysis"""
+    files = [('job_description', (jd_file.name, jd_file.getvalue(), jd_file.type))]
+    for resume_file in resume_files:
+        files.append(('resumes', (resume_file.name, resume_file.getvalue(), resume_file.type)))
+    
+    # Corrected endpoint
+    result = make_api_request("POST", "/api/v1/resume", files=files)
     return result
 
 def get_score_color(score):
@@ -153,306 +131,73 @@ def render_score_gauge(score: int, title: str = "Relevance Score"):
         </div>
         """, unsafe_allow_html=True)
 
-# Sidebar Navigation
-with st.sidebar:
-    st.markdown("### 🎯 Navigation")
-    view_option = st.radio(
-        "Select View:",
-        ["Placement Team", "Student Portal"],
-        key="view_selector"
-    )
-    st.session_state.current_view = view_option
-    
-    st.markdown("---")
-    st.markdown("### 📊 Quick Stats")
-    total_jobs = len(st.session_state.jobs) if st.session_state.jobs else 0
-    st.metric("Active Job Postings", total_jobs)
-    
-    st.markdown("---")
-    st.markdown("### ℹ️ About")
-    st.info("This system uses AI to analyze resume relevance against job descriptions, helping both recruiters and students optimize the hiring process.")
-
-# Main Application
+# --- Main Application ---
 st.markdown('<h1 class="header-title">📄 Innomatics Resume Analyzer</h1>', unsafe_allow_html=True)
 
-# Placement Team View
-if st.session_state.current_view == "Placement Team":
-    st.markdown("## 👔 Placement Team Dashboard")
-    
-    tab1, tab2 = st.tabs(["📤 Upload JD", "👥 Candidate Review"])
-    
-    with tab1:
-        st.markdown("### Upload Job Description")
-        
-        col1, col2 = st.columns([2, 1])
-        with col1:
-            jd_file = st.file_uploader(
-                "Choose a Job Description file",
-                type=['txt', 'pdf'],
-                help="Upload a text or PDF file containing the job description"
-            )
-            
-            if jd_file is not None:
-                if st.button("🚀 Process Job Description", type="primary"):
-                    with st.spinner("Processing job description..."):
-                        result = upload_job_description(jd_file)
-                        
-                    if result:
-                        st.success("✅ Job Description uploaded successfully!")
-                        
-                        # Display extracted details
-                        st.markdown("### 📋 Extracted Job Details")
-                        
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            st.markdown(f"**Role Title:** {result.get('title', 'N/A')}")
-                            st.markdown(f"**Department:** {result.get('department', 'N/A')}")
-                            st.markdown(f"**Experience Required:** {result.get('experience', 'N/A')}")
-                        
-                        with col2:
-                            st.markdown(f"**Location:** {result.get('location', 'N/A')}")
-                            st.markdown(f"**Job ID:** `{result.get('job_id', 'N/A')}`")
-                        
-                        if result.get('skills'):
-                            st.markdown("**Must-Have Skills:**")
-                            skills_cols = st.columns(4)
-                            for idx, skill in enumerate(result.get('skills', [])):
-                                with skills_cols[idx % 4]:
-                                    st.markdown(f"• {skill}")
-                        
-                        # Refresh jobs list
-                        fetch_jobs()
-        
-        with col2:
-            st.markdown("### 📊 Recent Uploads")
-            recent_jobs = fetch_jobs()
-            if recent_jobs:
-                for job in recent_jobs[:5]:
-                    st.markdown(f"• {job.get('title', 'Untitled')} - {job.get('date', '')}")
-    
-    with tab2:
-        st.markdown("### 👥 Candidate Review Dashboard")
-        
-        # Job selection
-        jobs = fetch_jobs()
-        if jobs:
-            job_titles = [f"{job.get('title', 'Untitled')} (ID: {job.get('id', 'N/A')})" for job in jobs]
-            selected_job = st.selectbox("Select Job Position:", job_titles)
-            
-            if selected_job:
-                job_id = selected_job.split("ID: ")[1].rstrip(")")
-                st.session_state.selected_job_id = job_id
-                
-                if st.button("🔄 Load Candidates"):
-                    with st.spinner("Fetching candidate data..."):
-                        candidates = fetch_candidates(job_id)
-                    
-                    if candidates:
-                        st.success(f"Found {len(candidates)} candidates")
-                        st.session_state.candidates = candidates
-        
-        # Display candidates
-        if st.session_state.candidates:
-            st.markdown("### 📊 Candidate Analysis")
-            
-            # Filters
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                verdict_filter = st.multiselect(
-                    "Filter by Verdict:",
-                    ["High", "Medium", "Low"],
-                    default=["High", "Medium", "Low"]
-                )
-            with col2:
-                min_score = st.slider("Minimum Score:", 0, 100, 0)
-            with col3:
-                max_score = st.slider("Maximum Score:", 0, 100, 100)
-            
-            # Filter candidates
-            filtered_candidates = [
-                c for c in st.session_state.candidates
-                if c.get('verdict', '') in verdict_filter
-                and min_score <= c.get('score', 0) <= max_score
-            ]
-            
-            # Display table
-            if filtered_candidates:
-                df = pd.DataFrame(filtered_candidates)
-                df['score'] = df['score'].apply(lambda x: f"{x}%")
-                
-                # Display with custom styling
-                st.dataframe(
-                    df[['name', 'score', 'verdict']],
-                    use_container_width=True,
-                    hide_index=True
-                )
-                
-                # Detailed view
-                st.markdown("### 🔍 Detailed Analysis")
-                for idx, candidate in enumerate(filtered_candidates):
-                    with st.expander(f"📋 {candidate['name']} - Score: {candidate['score']}%"):
-                        col1, col2 = st.columns(2)
-                        
-                        with col1:
-                            st.markdown(f"**Relevance Score:** {candidate['score']}%")
-                            st.markdown(f"**Verdict:** {candidate['verdict']}")
-                            st.markdown(f"**Email:** {candidate.get('email', 'N/A')}")
-                        
-                        with col2:
-                            if candidate.get('missing_skills'):
-                                st.markdown("**Missing Skills:**")
-                                for skill in candidate['missing_skills']:
-                                    st.markdown(f"• {skill}")
-                            
-                            if candidate.get('missing_certifications'):
-                                st.markdown("**Missing Certifications:**")
-                                for cert in candidate['missing_certifications']:
-                                    st.markdown(f"• {cert}")
-            else:
-                st.info("No candidates match the selected filters")
-        else:
-            st.info("No candidates found. Please load candidates for a job position.")
+# Simplified interface
+st.markdown("## 🚀 Get Started")
+st.markdown("Upload a job description and one or more resumes to see the AI-powered analysis in action.")
 
-# Student View
-else:
-    st.markdown("## 🎓 Student Portal")
-    
-    tab1, tab2 = st.tabs(["📤 Submit Resume", "📊 View Results"])
-    
-    with tab1:
-        st.markdown("### Submit Your Resume for Analysis")
+col1, col2 = st.columns(2)
+with col1:
+    jd_file = st.file_uploader(
+        "1. Upload Job Description",
+        type=['pdf', 'docx', 'txt'],
+        help="Upload the job description file."
+    )
+
+with col2:
+    resume_files = st.file_uploader(
+        "2. Upload Resumes",
+        type=['pdf', 'docx'],
+        accept_multiple_files=True,
+        help="Upload one or more resume files."
+    )
+
+if jd_file and resume_files:
+    if st.button("✨ Analyze Now", type="primary", use_container_width=True):
+        with st.spinner("Analyzing documents... This may take a moment depending on the number of resumes."):
+            analysis_result = analyze_resumes(jd_file, resume_files)
         
-        col1, col2 = st.columns([2, 1])
-        
-        with col1:
-            # Fetch available jobs
-            jobs = fetch_jobs()
-            
-            if jobs:
-                job_options = [f"{job.get('title', 'Untitled')} - {job.get('department', '')}" for job in jobs]
-                selected_job_str = st.selectbox(
-                    "Select the position you're applying for:",
-                    job_options,
-                    help="Choose the job description to match your resume against"
-                )
-                
-                # Extract job ID
-                selected_job_idx = job_options.index(selected_job_str)
-                selected_job_id = jobs[selected_job_idx].get('id')
-                
-                resume_file = st.file_uploader(
-                    "Upload your resume",
-                    type=['pdf', 'docx'],
-                    help="Upload your resume in PDF or DOCX format"
-                )
-                
-                if resume_file and selected_job_id:
-                    if st.button("🚀 Analyze My Resume", type="primary"):
-                        with st.spinner("Analyzing your resume... This may take a moment."):
-                            result = analyze_resume(selected_job_id, resume_file)
-                        
-                        if result:
-                            st.session_state.analysis_result = result
-                            st.success("✅ Analysis complete! Check the Results tab.")
-                            st.balloons()
-            else:
-                st.warning("No job positions available. Please contact the placement team.")
-        
-        with col2:
-            st.markdown("### 💡 Tips for Better Scores")
-            st.info("""
-            • Use keywords from the job description
-            • Highlight relevant projects
-            • Include certifications
-            • Quantify achievements
-            • Keep format clean and ATS-friendly
-            """)
-    
-    with tab2:
-        if st.session_state.analysis_result:
-            result = st.session_state.analysis_result
-            
-            st.markdown("### 📊 Your Resume Analysis Results")
-            
-            # Score display
-            score = result.get('relevance_score', 0)
-            render_score_gauge(score)
-            
-            # Verdict
-            verdict = result.get('verdict', 'Unknown')
-            verdict_color = {
-                'High': '#28a745',
-                'Medium': '#ffc107', 
-                'Low': '#dc3545'
-            }.get(verdict, '#6c757d')
-            
-            st.markdown(f"""
-            <div style="text-align: center; margin: 2rem 0;">
-                <h2>Fit Verdict: <span style="color: {verdict_color};">{verdict}</span></h2>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Detailed feedback
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown("### ❌ Missing Elements")
-                
-                if result.get('missing_skills'):
-                    st.markdown("**Skills to Add:**")
-                    for skill in result['missing_skills']:
-                        st.markdown(f"• {skill}")
-                
-                if result.get('missing_certifications'):
-                    st.markdown("**Certifications to Consider:**")
-                    for cert in result['missing_certifications']:
-                        st.markdown(f"• {cert}")
-                
-                if result.get('missing_projects'):
-                    st.markdown("**Project Ideas:**")
-                    for project in result['missing_projects']:
-                        st.markdown(f"• {project}")
-            
-            with col2:
-                st.markdown("### 💡 Personalized Suggestions")
-                
-                if result.get('suggestions'):
-                    for suggestion in result['suggestions']:
-                        st.info(f"💡 {suggestion}")
-                else:
-                    st.info("Your resume looks good! Consider adding more specific examples that demonstrate your skills.")
-            
-            # Export option
-            if st.button("📥 Download Analysis Report"):
-                report = f"""
-                Resume Analysis Report
-                ======================
-                Date: {datetime.now().strftime('%Y-%m-%d %H:%M')}
-                
-                Relevance Score: {score}%
-                Verdict: {verdict}
-                
-                Missing Skills:
-                {chr(10).join(['- ' + s for s in result.get('missing_skills', [])])}
-                
-                Missing Certifications:
-                {chr(10).join(['- ' + c for c in result.get('missing_certifications', [])])}
-                
-                Suggestions:
-                {chr(10).join(['- ' + s for s in result.get('suggestions', [])])}
-                """
-                
-                b64 = base64.b64encode(report.encode()).decode()
-                href = f'<a href="data:file/txt;base64,{b64}" download="resume_analysis_{datetime.now().strftime("%Y%m%d")}.txt">Download Report</a>'
-                st.markdown(href, unsafe_allow_html=True)
+        if analysis_result:
+            st.session_state.analysis_result = analysis_result
+            st.success("✅ Analysis Complete!")
+            st.balloons()
         else:
-            st.info("📤 Please submit your resume in the 'Submit Resume' tab to see analysis results.")
+            st.error("Something went wrong during the analysis. Please check the logs.")
+
+# Display results if available
+if st.session_state.analysis_result:
+    result = st.session_state.analysis_result
+    st.markdown("---")
+    st.markdown("## 📊 Analysis Results")
+    st.markdown(f"**Analysis for Job:** `{result.get('job_description_file', 'N/A')}`")
+    st.markdown(f"**Firestore Job ID:** `{result.get('firestore_job_id', 'N/A')}`")
+
+    # Display results for each candidate
+    if result.get('results'):
+        for candidate in result['results']:
+            score = candidate.get('relevance_score', 0)
+            verdict = candidate.get('verdict', 'Unknown')
             
-            # Sample analysis preview
-            if st.checkbox("View Sample Analysis"):
-                st.markdown("### Sample Analysis Preview")
-                render_score_gauge(75, "Sample Score")
-                st.success("This is what your analysis will look like after submission!")
+            with st.expander(f"📄 **{candidate.get('file_name')}** - Score: {score}% ({verdict})", expanded=True):
+                col1, col2 = st.columns([1, 2])
+                
+                with col1:
+                    render_score_gauge(score)
+                    verdict_color = get_score_color(score).split('-')[1]
+                    st.markdown(f"<h4 style='text-align: center;'>Verdict: <span style='color: {verdict_color};'>{verdict}</span></h4>", unsafe_allow_html=True)
+
+                with col2:
+                    st.markdown("#### Key Feedback")
+                    st.info(f"💡 {candidate.get('feedback', 'No feedback available.')}")
+                    
+                    missing_skills = candidate.get('missing_skills', [])
+                    if missing_skills:
+                        st.markdown("##### Areas for Improvement (Missing Skills)")
+                        st.warning(" ".join([f"`{skill}`" for skill in missing_skills]))
+    else:
+        st.warning("No analysis results were returned from the API.")
 
 # Footer
 st.markdown("---")
