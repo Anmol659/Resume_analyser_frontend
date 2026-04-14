@@ -1,4 +1,4 @@
-# Innomatics Resume Analyzer - Frontend  
+#  Resume Analyzer - Frontend  
 
 ![Python](https://img.shields.io/badge/python-3.10+-blue.svg)  
 ![Streamlit](https://img.shields.io/badge/Framework-Streamlit-ff4b4b.svg)  
